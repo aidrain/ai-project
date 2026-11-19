@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수원대학교 | 2027학년도 전공 교육과정 개정 도우미</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- 상단 수원대학교 로고 + 타이틀 헤더 -->
+    <header class="app-header">
+      <img src="/logo" alt="수원대학교 로고" class="logo-img" />
+      <div class="header-text">
+        <h1>2027학년도 전공 교육과정 개정 도우미</h1>
+        <p>2026학년도 교육과정을 바탕으로 신설·변경·폐지를 반영해 개정표와 2027학년도 편성표를 만듭니다.</p>
+      </div>
+    </header>
+
+    <!-- 알림 메시지 -->
+    <div id="status-banner" class="banner info">데이터를 불러오는 중...</div>
+
+    <!-- 1. 기초 데이터 업로드 & 초기화 -->
+    <section class="card upload-bar">
+      <div class="upload-left">
+        <label for="excel-file" class="file-label">2026학년도 엑셀 파일 (.xlsx):</label>
+        <input type="file" id="excel-file" accept=".xlsx" />
+        <button id="btn-upload" class="btn btn-secondary">파일 불러오기</button>
+      </div>
+      <div class="upload-right">
+        <button id="btn-reset" class="btn btn-outline">개정 작업 전체 초기화</button>
+      </div>
+    </section>
+
+    <!-- 요약 지표 4개 -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">2026학년도 과목 수</div>
+        <div class="metric-value" id="m-count-2026">-</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">2027학년도 과목 수</div>
+        <div class="metric-value" id="m-count-2027">-</div>
+        <div class="metric-delta" id="m-delta-2027">-</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">2026 총 학점-이론-실습</div>
+        <div class="metric-value" id="m-credits-2026">-</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">2027 총 학점-이론-실습</div>
+        <div class="metric-value" id="m-credits-2027">-</div>
+      </div>
+    </section>
+
+    <!-- 2. 교과목 개정 작업 선택 -->
+    <section class="card">
+      <h2>2. 교과목 개정 작업 선택</h2>
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="form-add">➕ 신규 교과목 개설</button>
+        <button type="button" class="tab-btn" data-tab="form-edit">✏️ 교과목 변경</button>
+        <button type="button" class="tab-btn" data-tab="form-del">🗑️ 교과목 폐설</button>
+      </div>
+
+      <!-- 탭 1: 신설 -->
+      <form id="form-add" class="tab-panel active">
+        <div class="form-row three-col">
+          <div>
+            <label>과목구분</label>
+            <select id="add-cat">
+              <option value="전공핵심">전공핵심</option>
+              <option value="전공선택" selected>전공선택</option>
+            </select>
+          </div>
+          <div>
+            <label>학수번호 (미정이면 빈칸)</label>
+            <input type="text" id="add-code" placeholder="예: 12345" />
+          </div>
+          <div>
+            <label>교과목명</label>
+            <input type="text" id="add-name" placeholder="예: AI경제데이터분석" required />
+          </div>
+        </div>
+        <div class="form-row four-col">
+          <div>
+            <label>학년-학기</label>
+            <input type="text" id="add-term" value="3-1" placeholder="예: 3-1" required />
+          </div>
+          <div>
+            <label>학점</label>
+            <input type="number" id="add-credit" value="3" min="0" max="10" />
+          </div>
+          <div>
+            <label>이론</label>
+            <input type="number" id="add-theory" value="3" min="0" max="10" />
+          </div>
+          <div>
+            <label>실습</label>
+            <input type="number" id="add-practice" value="0" min="0" max="10" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">신규 교과목 개설</button>
+      </form>
+
+      <!-- 탭 2: 변경 -->
+      <form id="form-edit" class="tab-panel">
+        <div class="form-row">
+          <div>
+            <label>변경할 교과목 선택</label>
+            <select id="edit-target"></select>
+          </div>
+        </div>
+        <p class="hint">바꾸고 싶은 항목만 수정하세요. (그대로 두면 기존 값이 유지됩니다.)</p>
+        <div class="form-row three-col">
+          <div>
+            <label>과목구분 변경</label>
+            <select id="edit-cat">
+              <option value="전공핵심">전공핵심</option>
+              <option value="전공선택">전공선택</option>
+            </select>
+          </div>
+          <div>
+            <label>교과목명 변경</label>
+            <input type="text" id="edit-name" required />
+          </div>
+          <div>
+            <label>학년-학기 변경</label>
+            <input type="text" id="edit-term" required />
+          </div>
+        </div>
+        <div class="form-row three-col">
+          <div>
+            <label>학점 변경</label>
+            <input type="number" id="edit-credit" min="0" max="10" />
+          </div>
+          <div>
+            <label>이론 변경</label>
+            <input type="number" id="edit-theory" min="0" max="10" />
+          </div>
+          <div>
+            <label>실습 변경</label>
+            <input type="number" id="edit-practice" min="0" max="10" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">교과목 변경 반영</button>
+      </form>
+
+      <!-- 탭 3: 폐설 -->
+      <form id="form-del" class="tab-panel">
+        <div class="form-row">
+          <div>
+            <label>폐설할 교과목 선택</label>
+            <select id="del-target"></select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-danger">교과목 폐설 반영</button>
+      </form>
+    </section>
+
+    <!-- 3. 교과목 개정표 (신구대비표 요약) -->
+    <section class="card">
+      <div class="section-header">
+        <h2>3. 교과목 개정표 (신구대비표 요약)</h2>
+        <button id="btn-undo" class="btn btn-outline" style="display:none;">마지막 개정 작업 취소</button>
+      </div>
+      <p id="revision-summary" class="hint">아직 추가·변경·폐지한 내역이 없습니다.</p>
+      <div class="table-wrap">
+        <table id="revision-table" style="display:none;">
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>과목구분</th>
+              <th>변경 전 (2026)</th>
+              <th>변경 후 (2027)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. 2027학년도 전공 교육과정 편성표 & 다운로드 -->
+    <section class="card">
+      <div class="section-header">
+        <h2>4. 2027학년도 전공 교육과정 편성표</h2>
+        <a href="/api/download" class="btn btn-primary">📥 2027학년도 전공 교육과정 엑셀(.xlsx) 다운로드</a>
+      </div>
+      <div id="curriculum-tables"></div>
+    </section>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
