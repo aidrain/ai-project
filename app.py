@@ -8,6 +8,7 @@ from typing import Any
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request, send_file
 
+import db
 import tools
 
 load_dotenv()
@@ -27,14 +28,31 @@ STATE: dict[str, Any] = {
 }
 
 
+def _persist_state() -> None:
+    """현재 작업 상태를 SQLite에 자동 저장합니다."""
+    if STATE["df_2026"] is not None and STATE["filename"]:
+        db.save_workspace(STATE["filename"], STATE["meta"], STATE["df_2026"], STATE["changes"])
+
+
 def _init_default_dataset() -> None:
-    """기본 샘플 파일이 있으면 메모리에 불러옵니다."""
+    """DB에 저장된 최근 작업이 있으면 복원하고, 없으면 기본 샘플 파일을 불러옵니다."""
+    db.init_db()
+    latest = db.load_latest_workspace()
+    if latest is not None:
+        STATE["df_2026"] = latest["df_2026"]
+        STATE["meta"] = latest["meta"]
+        STATE["filename"] = latest["filename"]
+        STATE["changes"] = latest["changes"]
+        logger.info("DB에서 최근 작업 복원 완료: %s (변경 %d건)", STATE["filename"], len(STATE["changes"]))
+        return
+
     if tools.DEFAULT_EXCEL_PATH.exists():
         df, meta = tools.parse_curriculum_excel(tools.DEFAULT_EXCEL_PATH)
         STATE["df_2026"] = df
         STATE["meta"] = meta
         STATE["filename"] = tools.DEFAULT_EXCEL_PATH.name
         STATE["changes"] = []
+        _persist_state()
         logger.info("기본 샘플 파일 로드 완료: %s (%d개 과목)", STATE["filename"], len(df))
 
 
@@ -67,6 +85,7 @@ def _build_state_payload() -> dict[str, Any]:
         "courses_2027": df_2027.to_dict(orient="records"),
         "revision_rows": revision_df.to_dict(orient="records"),
         "categories": categories,
+        "saved_workspaces": db.list_workspaces(),
     }
 
 
@@ -108,6 +127,7 @@ def upload_excel() -> Any:
     STATE["meta"] = meta
     STATE["filename"] = file.filename
     STATE["changes"] = []
+    _persist_state()
     logger.info("업로드 완료: %s (%d개 과목)", file.filename, len(df))
     return jsonify(_build_state_payload())
 
@@ -140,6 +160,7 @@ def add_course() -> Any:
             "학점-이론-실습": f"{credit}-{theory}-{practice}",
         }
     )
+    _persist_state()
     return jsonify(_build_state_payload())
 
 
@@ -187,6 +208,7 @@ def edit_course() -> Any:
             "새_학점이론실습": new_ctp,
         }
     )
+    _persist_state()
     return jsonify(_build_state_payload())
 
 
@@ -212,6 +234,7 @@ def delete_course() -> Any:
             "기존_학점이론실습": cur["학점-이론-실습"],
         }
     )
+    _persist_state()
     return jsonify(_build_state_payload())
 
 
@@ -219,12 +242,42 @@ def delete_course() -> Any:
 def undo_change() -> Any:
     if STATE["changes"]:
         STATE["changes"].pop()
+        _persist_state()
     return jsonify(_build_state_payload())
 
 
 @app.post("/api/change/reset")
 def reset_changes() -> Any:
     STATE["changes"] = []
+    _persist_state()
+    return jsonify(_build_state_payload())
+
+
+@app.post("/api/workspace/load")
+def load_saved_workspace() -> Any:
+    data = request.get_json(silent=True) or {}
+    ws_id = data.get("id")
+    if ws_id is None:
+        return jsonify({"error": "불러올 작업을 선택해 주세요."}), 400
+    ws_data = db.load_workspace(int(ws_id))
+    if ws_data is None:
+        return jsonify({"error": "저장된 작업을 찾을 수 없습니다."}), 404
+
+    STATE["df_2026"] = ws_data["df_2026"]
+    STATE["meta"] = ws_data["meta"]
+    STATE["filename"] = ws_data["filename"]
+    STATE["changes"] = ws_data["changes"]
+    logger.info("저장된 작업 불러오기: %s", STATE["filename"])
+    return jsonify(_build_state_payload())
+
+
+@app.post("/api/workspace/delete")
+def delete_saved_workspace() -> Any:
+    data = request.get_json(silent=True) or {}
+    ws_id = data.get("id")
+    if ws_id is None:
+        return jsonify({"error": "삭제할 작업을 선택해 주세요."}), 400
+    db.delete_workspace(int(ws_id))
     return jsonify(_build_state_payload())
 
 

@@ -20,7 +20,7 @@
     <!-- 알림 메시지 -->
     <div id="status-banner" class="banner info">데이터를 불러오는 중...</div>
 
-    <!-- 1. 기초 데이터 업로드 & 초기화 -->
+    <!-- 1. 기초 데이터 업로드 & 저장된 학과 작업 -->
     <section class="card upload-bar">
       <div class="upload-left">
         <label for="excel-file" class="file-label">2026학년도 엑셀 파일 (.xlsx):</label>
@@ -29,6 +29,15 @@
       </div>
       <div class="upload-right">
         <button id="btn-reset" class="btn btn-outline">개정 작업 전체 초기화</button>
+      </div>
+    </section>
+
+    <section class="card upload-bar" id="saved-ws-bar">
+      <div class="upload-left" style="flex: 1;">
+        <label for="saved-ws-select" class="file-label">💾 자동 저장된 학과 작업:</label>
+        <select id="saved-ws-select" style="max-width: 440px;"></select>
+        <button id="btn-ws-load" class="btn btn-secondary">불러오기</button>
+        <button id="btn-ws-del" class="btn btn-outline">삭제</button>
       </div>
     </section>
 
@@ -190,6 +199,6 @@
     </section>
   </div>
 
-  <script src="/static/app.js?v=6"></script>
+  <script src="/static/app.js?v=7"></script>
 </body>
 </html>

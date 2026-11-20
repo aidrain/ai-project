@@ -71,6 +71,22 @@ function syncEditFormWithSelectedCourse() {
   document.getElementById("edit-practice").value = pr;
 }
 
+function fillSavedWorkspaces(workspaces, currentFilename) {
+  const bar = document.getElementById("saved-ws-bar");
+  const sel = document.getElementById("saved-ws-select");
+  if (!workspaces || workspaces.length === 0) {
+    bar.style.display = "none";
+    return;
+  }
+  bar.style.display = "flex";
+  sel.innerHTML = workspaces
+    .map(
+      (ws) =>
+        `<option value="${ws.id}" ${ws.filename === currentFilename ? "selected" : ""}>${escapeHtml(ws.major)} (${escapeHtml(ws.filename)}) · 변경 ${ws.change_count}건 · ${escapeHtml(ws.updated_at)}</option>`
+    )
+    .join("");
+}
+
 function renderState(data, statusMsg = null) {
   currentState = data;
   if (!data.loaded) {
@@ -94,6 +110,7 @@ function renderState(data, statusMsg = null) {
   document.getElementById("m-credits-2026").textContent = m.credits_2026;
   document.getElementById("m-credits-2027").textContent = m.credits_2027;
 
+  fillSavedWorkspaces(data.saved_workspaces || [], data.filename);
   fillCourseSelectors(data.courses_2027);
 
   // 교과목 개정표 렌더링
@@ -258,6 +275,34 @@ document.getElementById("btn-undo").addEventListener("click", async () => {
 
 document.getElementById("btn-reset").addEventListener("click", async () => {
   await callApi("/api/change/reset", { method: "POST" }, "개정 작업을 모두 초기화했습니다.");
+});
+
+document.getElementById("btn-ws-load").addEventListener("click", async () => {
+  const wsId = document.getElementById("saved-ws-select").value;
+  if (!wsId) return;
+  await callApi(
+    "/api/workspace/load",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(wsId) }),
+    },
+    "저장된 학과 작업을 불러왔습니다."
+  );
+});
+
+document.getElementById("btn-ws-del").addEventListener("click", async () => {
+  const wsId = document.getElementById("saved-ws-select").value;
+  if (!wsId) return;
+  await callApi(
+    "/api/workspace/delete",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(wsId) }),
+    },
+    "선택한 저장 작업을 삭제했습니다."
+  );
 });
 
 callApi("/api/state");
