@@ -150,6 +150,13 @@ body {
   font-weight: 600;
 }
 
+.metric-sub {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .tabs {
   display: flex;
   gap: 8px;
@@ -188,6 +195,10 @@ body {
   margin-bottom: 12px;
 }
 
+.two-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .three-col {
   grid-template-columns: repeat(3, 1fr);
 }
@@ -197,6 +208,7 @@ body {
 }
 
 @media (max-width: 720px) {
+  .two-col,
   .three-col,
   .four-col {
     grid-template-columns: 1fr;

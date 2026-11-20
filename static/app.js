@@ -14,7 +14,27 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;");
 }
 
+function fillCategorySelectors(courses) {
+  const defaultCats = ["전공핵심", "전공선택", "전공기초교양", "진로취업"];
+  const foundCats = courses.map((c) => c["과목구분"]).filter(Boolean);
+  const allCats = [...new Set([...defaultCats, ...foundCats])];
+
+  ["add-cat", "edit-cat"].forEach((id) => {
+    const sel = document.getElementById(id);
+    const prev = sel.value;
+    sel.innerHTML = allCats
+      .map((cat) => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`)
+      .join("");
+    if (prev && allCats.includes(prev)) {
+      sel.value = prev;
+    } else if (id === "add-cat" && allCats.includes("전공선택")) {
+      sel.value = "전공선택";
+    }
+  });
+}
+
 function fillCourseSelectors(courses) {
+  fillCategorySelectors(courses);
   const editSel = document.getElementById("edit-target");
   const delSel = document.getElementById("del-target");
   const prevEdit = editSel.value;
@@ -66,6 +86,9 @@ function renderState(data, statusMsg = null) {
 
   const m = data.metrics;
   document.getElementById("m-count-2026").textContent = `${m.count_2026}개`;
+  document.getElementById("m-sub-2026").innerHTML = (m.categories_2026 || [])
+    .map((c) => `${escapeHtml(c.name)} (${c.count}과목 / 소계: ${escapeHtml(c.subtotal)})`)
+    .join("<br />");
   document.getElementById("m-count-2027").textContent = `${m.count_2027}개`;
   document.getElementById("m-delta-2027").textContent = m.delta_text;
   document.getElementById("m-credits-2026").textContent = m.credits_2026;
@@ -174,7 +197,7 @@ document.getElementById("form-add").addEventListener("submit", async (e) => {
   e.preventDefault();
   const payload = {
     과목구분: document.getElementById("add-cat").value,
-    학수번호: document.getElementById("add-code").value,
+    학수번호: "",
     교과목명: document.getElementById("add-name").value,
     "학년-학기": document.getElementById("add-term").value,
     학점: Number(document.getElementById("add-credit").value),
@@ -190,7 +213,6 @@ document.getElementById("form-add").addEventListener("submit", async (e) => {
     },
     "신규 교과목 개설이 반영되었습니다."
   );
-  document.getElementById("add-code").value = "";
   document.getElementById("add-name").value = "";
 });
 

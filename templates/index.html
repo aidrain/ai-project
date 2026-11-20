@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>수원대학교 | 2027학년도 전공 교육과정 개정 도우미</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/style.css?v=2" />
 </head>
 <body>
   <div class="container">
@@ -37,6 +37,7 @@
       <div class="metric-card">
         <div class="metric-label">2026학년도 과목 수</div>
         <div class="metric-value" id="m-count-2026">-</div>
+        <div class="metric-sub" id="m-sub-2026">-</div>
       </div>
       <div class="metric-card">
         <div class="metric-label">2027학년도 과목 수</div>
@@ -64,17 +65,15 @@
 
       <!-- 탭 1: 신설 -->
       <form id="form-add" class="tab-panel active">
-        <div class="form-row three-col">
+        <div class="form-row two-col">
           <div>
             <label>과목구분</label>
             <select id="add-cat">
               <option value="전공핵심">전공핵심</option>
               <option value="전공선택" selected>전공선택</option>
+              <option value="전공기초교양">전공기초교양</option>
+              <option value="진로취업">진로취업</option>
             </select>
-          </div>
-          <div>
-            <label>학수번호 (미정이면 빈칸)</label>
-            <input type="text" id="add-code" placeholder="예: 12345" />
           </div>
           <div>
             <label>교과목명</label>
@@ -110,13 +109,15 @@
             <select id="edit-target"></select>
           </div>
         </div>
-        <p class="hint">바꾸고 싶은 항목만 수정하세요. (그대로 두면 기존 값이 유지됩니다.)</p>
+        <p class="hint">바꾸고 싶은 항목만 수정하세요. (그대로 두면 기존 값이 유지되며, 교과목명을 변경하면 학수번호는 신규 발급을 위해 비워집니다.)</p>
         <div class="form-row three-col">
           <div>
             <label>과목구분 변경</label>
             <select id="edit-cat">
               <option value="전공핵심">전공핵심</option>
               <option value="전공선택">전공선택</option>
+              <option value="전공기초교양">전공기초교양</option>
+              <option value="진로취업">진로취업</option>
             </select>
           </div>
           <div>
@@ -189,6 +190,6 @@
     </section>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=6"></script>
 </body>
 </html>

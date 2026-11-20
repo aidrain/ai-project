@@ -134,7 +134,7 @@ def add_course() -> Any:
             "유형": "신설",
             "과목구분": str(data.get("과목구분", "전공선택")).strip(),
             "전공": STATE["meta"]["major"],
-            "학수번호": str(data.get("학수번호", "")).strip(),
+            "학수번호": "",
             "교과목명": name,
             "학년-학기": term,
             "학점-이론-실습": f"{credit}-{theory}-{practice}",

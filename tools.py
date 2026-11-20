@@ -123,6 +123,9 @@ def apply_changes(
                 df_2027.loc[mask, "교과목명"] = item["새_교과목명"]
                 df_2027.loc[mask, "학년-학기"] = item["새_학년학기"]
                 df_2027.loc[mask, "학점-이론-실습"] = item["새_학점이론실습"]
+                if item["기존_교과목명"] != item["새_교과목명"]:
+                    # 교과목명이 바뀌면 기존 학수번호를 쓸 수 없으므로 신규 발급 대상으로 비움
+                    df_2027.loc[mask, "학수번호"] = ""
 
             cat_summary = new_cat if old_cat == new_cat else f"{old_cat} → {new_cat}"
             revision_rows.append(
@@ -177,6 +180,15 @@ def get_summary_metrics(
         else f"{diff_sign}개 (신설 {add_cnt} · 변경 {edit_cnt} · 폐지 {del_cnt})"
     )
 
+    categories_2026 = [
+        {
+            "name": cat,
+            "count": int(len(df_2026[df_2026["과목구분"] == cat])),
+            "subtotal": sum_credits(df_2026[df_2026["과목구분"] == cat]),
+        }
+        for cat in df_2026["과목구분"].unique()
+    ]
+
     return {
         "count_2026": len(df_2026),
         "count_2027": len(df_2027),
@@ -187,6 +199,7 @@ def get_summary_metrics(
         "delete_count": del_cnt,
         "credits_2026": sum_credits(df_2026),
         "credits_2027": sum_credits(df_2027),
+        "categories_2026": categories_2026,
     }
 
 
